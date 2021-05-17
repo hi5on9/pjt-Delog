@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MAIN">
+
+		<resultMap type="com.web.blog.model.user.User" id="userMap">
+    	<result column="uid" property="uid"/>
+    	<result column="email" property="email"/>
+    	<result column="password" property="password"/>
+    	<result column="nickname" property="nickname"/>
+    	<result column="role" property="role"/>
+    	<result column="provider" property="provider"/>
+    	<result column="snsid" property="snsid"/>
+    	<result column="create_date" property="create_date"/>
+    	<result column="profile" property="profile"/>
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.post.Post" id="postMap">
+		<result column="pid" property="pid" />
+		<result column="writer" property="writer" />
+		<result column="title" property="title" />
+		<result column="contents" property="contents" />
+		<result column="hit" property="hit" />
+		<result column="is_hidden" property="is_hidden" />
+		<result column="create_date" property="create_date" />
+		<result column="tags" property="tags" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.user.Follow"
+		id="followMap">
+		<result column="follower_id" property="follower_id" />
+		<result column="following_id" property="following_id" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.post.PostUser"
+		id="postuserMap">
+		<collection property="user" resultMap="userMap" />
+		<collection property="post" resultMap="postMap" />
+	</resultMap>
+
+
+	<resultMap type="com.web.blog.model.user.FollowPost"
+		id="followpostMap">
+		<collection property="follow" resultMap="followMap" />
+		<collection property="post" resultMap="postMap" />
+		<collection property="user" resultMap="userMap" />
+	</resultMap>
+	
+	
+	<!-- 나의 uid가 {uid}일때 내가 팔로우한 사람들의 게시물 GET] /main/List/following -->
+	<select id="selectFollowingsRecentPost"
+		resultMap="followpostMap">
+		SELECT
+		*
+		FROM
+		FOLLOW AS f
+		JOIN POST AS P
+		ON f.FOLLOWING_ID =
+		P.Writer
+		JOIN USER AS U
+		ON P.Writer = U.Uid
+		WHERE
+		FOLLOWER_ID = #{uid};
+	</select>
+
+	<!-- 팔로워 많은 순 6명 Sort GET] /main/List/order/follower/ -->
+	<select id="selectFolloweringUidsOrderByFollowerCount" resultType="com.web.blog.model.UserAndCount">
+	<!-- 	SELECT
+		FOLLOWING_ID, COUNT(FOLLOWING_ID) AS count
+		FROM FOLLOW
+		GROUP BY FOLLOWING_ID
+		ORDER BY COUNT DESC
+		LIMIT 6; -->
+		SELECT *, COUNT(FOLLOWING_ID) AS COUNT 
+		FROM USER AS u 
+		JOIN FOLLOW AS f 
+		ON u.uid = f.FOLLOWING_ID 
+		GROUP BY FOLLOWING_ID 
+		ORDER BY COUNT DESC 
+		LIMIT 6;
+	</select>
+
+	<!-- 게시글 많은 순 3명 Sort GET] /main/List/order/postcnt -->
+	<select id="selectUidsOrderByManyPostCount" resultType="com.web.blog.model.UserAndCount">
+	<!-- 	SELECT
+		WRITER, COUNT(WRITER) AS count
+		FROM POST
+		GROUP BY Writer
+		ORDER BY COUNT
+		DESC
+		LIMIT 3 ; -->
+		SELECT *, COUNT(WRITER) AS COUNT 
+		FROM USER AS u 
+		JOIN POST AS p 
+		ON u.uid = p.Writer 
+		GROUP BY Writer 
+		ORDER BY COUNT DESC 
+		LIMIT 3;
+	</select>
+
+
+	<!-- Hit 높은 게시물 순 5개 GET] /main/List/order/hit -->
+	<select id="selectPostsOrdeyByManyHit"
+		resultMap = "postuserMap">
+		SELECT
+		*
+		FROM
+		POST AS p JOIN USER AS u
+		ON p.Writer = u.uid
+		WHERE is_complete = 0
+		ORDER BY HIT DESC
+		LIMIT 5;
+	</select>
+
+	<!-- 최신 글 순 10개 GET] /main/order/List/recent -->
+	<select id="selectRecentPosts"
+		resultMap = "postuserMap">
+		SELECT 
+		* 
+		FROM 
+		POST AS p JOIN USER AS u
+		ON p.Writer = u.uid
+		WHERE is_complete = 0
+		ORDER BY p.Create_date DESC 
+		LIMIT 5;
+	</select>
+
+</mapper>

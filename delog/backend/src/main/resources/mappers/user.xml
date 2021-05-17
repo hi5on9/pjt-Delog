@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="USER"> <!-- mybatis는 namespace필수!! -->
+
+	 <select id="selectUserByEmail"
+		resultType="com.web.blog.model.user.User">
+		select *
+		from USER
+		where email = #{email}
+	</select>
+
+	<select id="selectUserByNickname"
+		resultType="com.web.blog.model.user.User">
+		select *
+		from USER
+		where
+		nickname =#{nickname}
+	</select>
+
+	<select id="selectUserByUid"
+		resultType="com.web.blog.model.user.User">
+		select *
+		from USER
+		where uid = #{uid}
+	</select>
+
+	<insert id="insertUser" useGeneratedKeys="true" keyProperty="uid">
+		insert 
+		into 
+		USER (nickname, email, password, provider, snsid, create_date, profile) 
+		values
+		(#{nickname}, #{email}, #{password},#{provider}, #{snsid}, now(), #{profile})
+	</insert>
+
+	<delete id="deleteUser">
+		delete 
+		from 
+		USER
+		where uid = #{uid}
+	</delete>
+
+	<update id="modifyPassWordUser">
+		update USER
+		set password = #{password}	
+		where uid = #{uid}
+	</update>
+	
+	
+	<update id="modifyNickNameUser">
+		update USER
+		set nickname = #{nickname}
+		where uid = #{uid}
+	</update>
+	
+	<select id="getKakaoUser" resultType="com.web.blog.model.user.User">
+		select * 
+		FROM USER 
+		WHERE Provider = #{provider} AND SNSId = #{snsid}
+	 </select>
+	 
+	 
+	 <select id="selectAll" resultType = "com.web.blog.model.user.User">
+	 	select *
+	 	from USER
+	 	where uid != 1
+	 </select>
+	 
+	 <select id="selectHashtagFields" resultType ="string">
+	 		SELECT title 
+		FROM HASHTAG 
+		WHERE hid 
+		IN ( SELECT ph.Hid as COUNT 
+				FROM POST AS p 
+				JOIN POSTHASHASHTAG AS ph 
+				ON p.Pid = ph.Pid
+				WHERE p.Writer = #{uid}
+				GROUP BY ph.Hid)
+		LIMIT 3;
+	<!-- 		SELECT U.Uid as uid, U.email as email, U.nickname as nickname, U.provider as provider, U.profile as profile , H.title as title
+				FROM POST AS p 
+				JOIN POSTHASHASHTAG AS ph 
+				ON p.Pid = ph.Pid
+				JOIN USER AS U
+				ON p.Writer = U.Uid
+				JOIN HASHTAG AS H
+				ON H.Hid = ph.Hid
+				WHERE U.uid = #{uid}
+				GROUP BY ph.Hid
+				LIMIT 3; -->	
+	 </select>
+	 
+	 <select id ="selectUserPassword" resultType="string">
+	 	SELECT PASSWORD 
+	 	FROM USER 
+	 	WHERE email = #{email}
+	 </select>
+
+	 
+	 <update id="updateProfile">
+	 	UPDATE 
+	 	USER
+	 	SET profile = #{profilePath}
+	 	WHERE uid = #{uid}
+	 </update>
+	 
+	 
+	
+
+
+</mapper>

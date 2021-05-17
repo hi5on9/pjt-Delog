@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FOLLOW">
+
+	<!-- 사전작업 : User와 Follow table Join -->
+    
+	<resultMap type="com.web.blog.model.user.User" id="userMap">
+    	<result column="uid" property="uid"/>
+    	<result column="email" property="email"/>
+    	<result column="password" property="password"/>
+    	<result column="nickname" property="nickname"/>
+    	<result column="role" property="role"/>
+    	<result column="provider" property="provider"/>
+    	<result column="snsid" property="snsid"/>
+    	<result column="create_date" property="create_date"/>
+    	<result column="profile" property="profile"/>
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.user.Follow" id="followMap">
+		<result column="follower_id" property="follower_id" />
+		<result column="following_id" property="following_id" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.user.FollowUser"
+		id="followuserMap">
+		<collection property="user" resultMap="userMap" />
+		<collection property="follow" resultMap="followMap" />
+	</resultMap>
+	
+
+
+	<insert id="follow">
+		insert into FOLLOW (FOLLOWER_ID, FOLLOWING_ID)
+		VALUES
+		(#{follower_id}, #{following_id});
+	</insert>
+
+	<delete id="unFollow">
+		DELETE 
+		FROM 
+		FOLLOW
+		WHERE follower_id = #{follower_id} AND following_id = #{following_id};
+	</delete>
+	
+	<select id="selectAllFollower" resultType="com.web.blog.model.user.User">
+		SELECT DISTINCT (SELECT nickname FROM USER WHERE uid = f.following_id) AS nickname, f.following_id AS uid, 
+		(SELECT profile from USER where uid = following_id) AS profile       
+		FROM USER u JOIN FOLLOW f
+		ON u.uid = f.follower_id
+		WHERE uid = #{uid}
+	</select>
+	
+	<select id="selectAllFollowing" resultType="com.web.blog.model.user.User">
+        SELECT DISTINCT (SELECT nickname FROM USER WHERE uid = f.follower_id) AS nickname, f.follower_id AS uid,
+        (SELECT profile from USER where uid = follower_id) AS profile
+		FROM USER u JOIN FOLLOW f
+		ON u.uid = f.following_id
+		WHERE uid = #{uid}
+	</select>
+	    
+    <select id="followerCheck" resultType = "com.web.blog.model.user.Follow">
+        select *
+        from FOLLOW
+        where follower_id = #{follower_id} and following_id = #{following_id}
+    </select>
+    
+    <select id="followingCheck" resultType = "com.web.blog.model.user.Follow">
+        select *
+        from FOLLOW
+        where following_id = #{follower_id} and follower_id = #{following_id}
+    </select>
+    
+</mapper>

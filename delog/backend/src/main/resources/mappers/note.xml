@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="NOTE">
+
+	<!-- 
+			CREATE TABLE `NOTE` (
+				`nid` INT(10) NULL DEFAULT NULL,
+				`Sender` INT(10) NULL DEFAULT NULL,
+				`Recipient` INT(10) NULL DEFAULT NULL,
+				`contents` VARCHAR(5000),
+				`create_date` DATETIME NULL DEFAULT current_timestamp(),
+				`read` INT(1) DEFAULT 0,			0 : 안읽은것 / 1 : 읽은것
+				`trash` INT(1) DEFAULT 0, 			0 : 보관함 / 1 : 쓰레기통에 있는것
+				PRIMARY KEY(`nid`),
+				FOREIGN KEY (Sender) REFERENCES USER(uid) ON DELETE cascade,
+				FOREIGN KEY (Recipient) REFERENCES USER(uid) ON DELETE cascade
+			)ENGINE=INNODB DEFAULT CHARSET=UTF8;
+	 -->
+	 
+	 <!-- 사전작업 : User와 Note table Join  Start-->
+	<resultMap type="com.web.blog.model.user.User" id="userMap">
+    	<result column="uid" property="uid"/>
+    	<result column="email" property="email"/>
+    	<result column="password" property="password"/>
+    	<result column="nickname" property="nickname"/>
+    	<result column="role" property="role"/>
+    	<result column="provider" property="provider"/>
+    	<result column="snsid" property="snsid"/>
+    	<result column="create_date" property="create_date"/>
+    	<result column="profile" property="profile"/>
+	</resultMap>
+	
+	<resultMap type="com.web.blog.model.Note" id="noteMap">
+		<result column="nid" property="nid" />
+		<result column="sender" property="sender" />
+		<result column="recipient" property="recipient" />
+		<result column="contents" property="contents" />
+		<result column="create_date" property="create_date" />
+		<result column="read" property="read" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.NoteUser"
+		id="noteuserMap">
+		<collection property="user" resultMap="userMap" />
+		<collection property="note" resultMap="noteMap" />
+	</resultMap>
+	
+	<!-- 사전작업 End -->
+	 
+	 
+	<!-- 쪽지 CRUD Start -->
+
+	
+	<insert id="sendNote">
+		insert into NOTE
+		(sender, recipient, contents)
+		values ( #{sender}, #{recipient}, #{contents})
+	</insert>
+
+	<select id="selectAllSendNote" resultMap = "noteuserMap">
+		SELECT u.uid, u.nickname, n.nid, (SELECT nickname from USER where uid = n.sender) AS sender, (SELECT nickname from USER where uid = n.recipient) AS recipient, n.contents, n.create_date, n.readed
+		FROM NOTE n join USER u
+		on n.sender = u.uid
+		WHERE u.uid = #{uid} and trash = 0
+		order by readed desc, create_date desc
+	</select>
+
+	<select id="selectAllReciveNote" resultMap = "noteuserMap">
+		SELECT u.uid, u.nickname, n.nid, (SELECT nickname from USER where uid = n.sender) AS sender, (SELECT nickname from USER where uid = n.recipient) AS recipient, n.contents, n.create_date, n.readed
+		FROM NOTE n join USER u
+		on n.recipient = u.uid
+		WHERE u.uid = #{uid} and trash = 0
+		order by readed desc, create_date desc 
+	</select>
+	
+	<select id ="selectNote" resultMap = "noteuserMap">
+		SELECT u.uid, n.nid, (SELECT nickname from USER where uid = n.sender) AS sender, (SELECT nickname from USER where uid = n.recipient) AS recipient, n.contents, n.create_date, n.readed
+		FROM NOTE n join USER u
+		on n.sender = u.uid
+		WHERE n.nid = #{nid}
+	</select>
+	
+	<update id ="trashNote">
+		update NOTE
+		set
+		trash = 1
+		where nid = #{nid}
+	</update>
+	
+	<delete id="deleteNote">
+		delete from NOTE
+		where nid = #{nid}
+	</delete>
+	
+	
+	<!-- 쪽지 CRUD End -->
+	
+	<update id="updateReaded">
+		update NOTE
+		set
+		readed = 0
+		where nid = #{nid}
+	</update>
+	
+	
+	
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="NOTICE">
+
+
+	<!-- 공지사항 CRUD Start -->
+
+	<insert id="createNotice">
+		insert into NOTICE
+		(title, contents, create_date, is_hidden, is_comment, is_main, category)
+		values (#{title}, #{contents}, now(), 1, 1, false, 1)
+	</insert>
+
+	<select id="selectNotice" resultType="com.web.blog.model.Notice">
+		select *
+		from NOTICE
+		where nid = #{nid}
+	</select>
+
+	<select id="selectAllNotice" resultType="com.web.blog.model.Notice">
+		select *
+		from NOTICE
+		where is_hidden = #{is_hidden}
+		order by is_main desc, create_date desc
+	</select>
+
+	<update id="updateNotice">
+		update NOTICE
+		set
+		title=#{title}, contents = #{contents} 
+		where nid = #{nid}
+	</update>
+	
+	
+	<delete id="deleteNotice">
+		delete from NOTICE
+		where nid = #{nid}
+	</delete>
+	
+	<!-- 공지사항 CRUD End -->
+	
+	
+	<!-- 공지사항 main Start -->
+
+	
+	<update id="DownMain">
+		update NOTICE
+		set
+			is_main = 0
+		where is_main = 1
+	</update>
+	
+	<update id="UpMain">
+		update NOTICE
+		set
+			is_main = 1
+		where nid = #{nid}
+	</update>
+
+	<!-- 공지사항 main End -->
+	
+	<!-- 공지사항 조회수 Start -->
+	
+	<update id="updateHit">
+		update NOTICE
+		set
+		hit = hit+1
+		where nid = #{nid}
+	</update>
+	
+	<!-- 공지사항 조회수 End -->
+	
+	<!-- 공지사항 main 화면 출력 top5 Start -->
+
+	<select id="selectMain" resultType = "com.web.blog.model.Notice">
+		SELECT * FROM NOTICE
+		ORDER BY is_main desc, create_date DESC
+		LIMIT 5;
+	</select>
+	<!-- 공지사항 main 화면 출력 top5 End -->
+	
+</mapper>

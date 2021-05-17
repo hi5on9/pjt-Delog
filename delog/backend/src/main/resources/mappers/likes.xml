@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="LIKES">
+
+	<!-- 사전작업 : User와 Post table Join -->
+		<resultMap type="com.web.blog.model.user.User" id="userMap">
+    	<result column="uid" property="uid"/>
+    	<result column="email" property="email"/>
+    	<result column="password" property="password"/>
+    	<result column="nickname" property="nickname"/>
+    	<result column="role" property="role"/>
+    	<result column="provider" property="provider"/>
+    	<result column="snsid" property="snsid"/>
+    	<result column="create_date" property="create_date"/>
+    	<result column="profile" property="profile"/>
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.post.Post" id="postMap">
+		<result column="pid" property="pid" />
+		<result column="writer" property="writer" />
+		<result column="title" property="title" />
+		<result column="contents" property="contents" />
+		<result column="hit" property="hit" />
+		<result column="is_hidden" property="is_hidden" />
+		<result column="create_date" property="create_date" />
+		<result column="tags" property="tags" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.post.PostUser"
+		id="postuserMap">
+		<collection property="user" resultMap="userMap" />
+		<collection property="post" resultMap="postMap" />
+	</resultMap>
+
+	<insert id="likePost">
+		insert into LIKES
+		(uid, pid)
+		values (#{uid}, #{pid})
+	</insert>
+
+
+	<delete id="unLikePost">
+		DELETE FROM LIKES
+		WHERE
+		uid = #{uid} and pid = #{pid}
+	</delete>
+
+
+
+	<select id="likeList" resultMap="postuserMap">
+		SELECT * FROM POST p join USER u
+		on p.writer = u.uid
+		WHERE pid
+		in (SELECT pid FROM LIKES WHERE uid = #{uid})
+		order by hit desc
+		limit #{page}, 10;
+	</select>
+
+
+	<select id="likeCheck" resultType="com.web.blog.model.Likes">
+		select * from LIKES
+		where
+		uid =
+		#{uid} and pid = #{pid}
+	</select>
+
+</mapper>

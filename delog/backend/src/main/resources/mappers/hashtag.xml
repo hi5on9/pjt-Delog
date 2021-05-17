@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="HASHTAG">
+
+	<select id="selectHashTagByTitle"
+		resultType="com.web.blog.model.Hashtag">
+		SELECT
+		*
+		FROM
+		HASHTAG
+		WHERE title = #{title}
+	</select>
+
+	<select id="selectPostHasHashTag"
+		resultType="com.web.blog.model.PostHasHashtag">
+		SELECT
+		*
+		FROM
+		POSTHASHASHTAG
+		WHERE pid = #{pid} AND hid =
+		#{hid}
+	</select>
+
+	<insert id="writeHashtag">
+		INSERT
+		INTO
+		HASHTAG(title)
+		VALUES(#{title})
+	</insert>
+
+	<insert id="writePostHasHashTag">
+		INSERT
+		INTO
+		POSTHASHASHTAG
+		VALUES(#{pid}, #{hid});
+	</insert>
+
+	<update id="increaseHashtagCount">
+		UPDATE 
+		HASHTAG 
+		SET COUNT = COUNT + 1 
+		WHERE title = #{title}
+	</update>
+
+	<update id="decreaseHashtagCount">
+		UPDATE 
+		HASHTAG 
+		SET COUNT = COUNT - 1 
+		WHERE title = #{title}
+	</update>
+
+	<delete id="deleteHashtagByTitle">
+		DELETE FROM HASHTAG
+		WHERE title = #{title}
+	</delete>
+	
+	
+	<delete id="deletePostHasHashTag">
+		DELETE
+		FROM
+		POSTHASHASHTAG
+		WHERE
+		pid = #{pid} and hid = #{hid}
+	</delete>
+</mapper>

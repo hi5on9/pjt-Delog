@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="REPORT">
+
+	<!-- 
+				Report Table
+		
+				`rid` INT(10) NOT NULL AUTO_INCREMENT,
+				`reporterUid` INT(10) NOT NULL,
+				`reportedUid` INT(10) NOT NULL,
+				`reason` VARCHAR(5000) NOT NULL COLLATE 'utf8_general_ci',
+				`create_date` DATETIME NULL DEFAULT current_timestamp(),
+				PRIMARY KEY (`rid`) ,
+				CONSTRAINT `REPORT_ibfk_1` FOREIGN KEY (`reporterUid`) REFERENCES `DLOG-DB`.`USER` (`Uid`) ON UPDATE RESTRICT ON DELETE CASCADE,
+				CONSTRAINT `REPORT_ibfk_2` FOREIGN KEY (`reportedUid`) REFERENCES `DLOG-DB`.`USER` (`Uid`) ON UPDATE RESTRICT ON DELETE CASCADE
+			
+			
+				Prison Table
+				
+				`rid` INT(10) NOT NULL AUTO_INCREMENT,
+				`uid` INT(10) NOT NULL,
+				`reason` VARCHAR(5000) NOT NULL COLLATE 'utf8_general_ci',
+				`create_date` DATETIME NULL DEFAULT current_timestamp(),
+				`term` INT(10) NULL DEFAULT '1',
+				PRIMARY KEY (`rid`),
+				CONSTRAINT `PRISON_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `DLOG-DB`.`USER` (`Uid`) ON UPDATE RESTRICT ON DELETE CASCADE
+	 -->
+	
+	 
+	 <!-- 사전작업 : User와 Prison table Join  Start-->
+		<resultMap type="com.web.blog.model.user.User" id="userMap">
+	    	<result column="uid" property="uid"/>
+	    	<result column="email" property="email"/>
+	    	<result column="password" property="password"/>
+	    	<result column="nickname" property="nickname"/>
+	    	<result column="role" property="role"/>
+	    	<result column="provider" property="provider"/>
+	    	<result column="snsid" property="snsid"/>
+	    	<result column="create_date" property="create_date"/>
+	    	<result column="profile" property="profile"/>
+		</resultMap>
+
+	<resultMap type="com.web.blog.model.Prison" id="prisonMap">
+		<result column="rid" property="rid" />
+		<result column="uid" property="uid" />
+		<result column="reason" property="reason" />
+		<result column="create_date" property="create_date" />
+		<result column="term" property="term" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.PrisonUser"
+		id="prisonuserMap">
+		<collection property="user" resultMap="userMap" />
+		<collection property="prison" resultMap="prisonMap" />
+	</resultMap>
+		
+		
+	<!-- 사전작업 End -->
+	 
+	 
+	 
+	<!-- 신고 CRUD Start -->
+	
+		<!-- 유저 기준 -->
+		
+		<insert id = "createReport">
+			INSERT into REPORT
+			(reporterUid, reportedUid, reason, create_date) 
+			values (#{reporterUid}, #{reportedUid}, #{reason}, now())
+		</insert>
+		
+		<select id = "selectMyReport" resultType = "com.web.blog.model.ReportUser">
+			SELECT  r.rid, (SELECT nickname FROM USER WHERE uid = r.reportedUid) as nickname, r.reason, r.create_date
+			FROM REPORT r join USER u
+			ON r.reporterUid = u.uid
+			WHERE r.reporterUid = #{uid}
+		</select>	
+		
+		<delete id = "deleteReport">
+			DELETE FROM REPORT
+			WHERE rid = #{rid}
+		</delete>
+		
+		<select id = "selectReport" resultType = "com.web.blog.model.Report">
+			SELECT *
+			FROM REPORT
+			WHERE reporterUid = #{reporterUid} and reportedUid = #{reportedUid}
+		</select>
+		
+		
+		<!-- 관리자 기준 -->
+		<select id = "selectAllReport" resultType = "com.web.blog.model.ReportList">
+			SELECT r.rid, (SELECT nickname FROM USER WHERE uid = r.reporterUid) as reporter,
+			(SELECT nickname FROM USER WHERE uid = r.reportedUid) as reported, r.reason, r.create_date, r.reporterUid, r.reportedUid
+			FROM REPORT r JOIN USER u
+			ON r.reportedUid = u.uid
+		</select>
+		
+		<select id = "selectReportByRid" resultType = "com.web.blog.model.Report">
+			SELECT *
+			FROM REPORT
+			WHERE rid = #{rid}
+		</select>
+		
+		<insert id = "createPrison">		
+			INSERT INTO PRISON (uid, reason, create_date, term)
+			values (#{uid}, #{reason}, now(), #{term})
+		</insert>
+		
+		
+		<select id = "selectPrison" resultMap = "prisonuserMap">
+			SELECT p.rid, p.uid, u.nickname, p.reason, p.create_date, p.term
+			FROM PRISON p join USER u
+			on p.uid = u.uid
+			ORDER BY
+				p.create_date
+		</select>
+		
+		<select id = "checkPrison" resultType = "com.web.blog.model.Prison">
+			SELECT rid, uid, reason, create_date, (term - (TIMESTAMPDIFF(MINUTE, create_date, NOW()))) AS term
+			FROM  PRISON
+			where uid = #{uid}
+		</select>
+		
+		 <!-- 로그인할때마다 신고먹혀있는지 확인 -->
+	 <delete id = "deletePrison">
+			delete FROM PRISON
+			where (term - (TIMESTAMPDIFF(MINUTE, create_date, now()))) <![CDATA[ < ]]> 0
+	</delete>	
+	
+	
+	<!-- 신고되어 있는지 확인 -->
+	
+	<!-- 신고 CRUD End -->
+	
+	
+	
+	
+	
+	
+	
+</mapper>

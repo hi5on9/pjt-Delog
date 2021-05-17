@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="REPLY">
+
+	<!-- 
+			`Rid`	INT(10) AUTO_INCREMENT,
+			`Pid` INT(10),					게시글 번호 + Prid(0이여양함)
+			`Prid` INT(10) DEFAULT 0,		게시글 번호 0 + Prid 번호
+			`writer` INT(10),				join해서 nickname 가져오기
+			`contents` VARCHAR(5000) DEFAULT NULL,
+			`create_date` DATETIME DEFAULT CURRENT_TIMESTAMP(),
+			`likes`		INT(10) DEFAULT 0,
+			`hates`		INT(10)	DEFAULT 0,
+	 -->
+	 
+	 <!-- 사전작업 : User와 Reply table Join  Start-->
+	<resultMap type="com.web.blog.model.user.User" id="userMap">
+    	<result column="uid" property="uid"/>
+    	<result column="email" property="email"/>
+    	<result column="password" property="password"/>
+    	<result column="nickname" property="nickname"/>
+    	<result column="role" property="role"/>
+    	<result column="provider" property="provider"/>
+    	<result column="snsid" property="snsid"/>
+    	<result column="create_date" property="create_date"/>
+    	<result column="profile" property="profile"/>
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.Reply" id="replyMap">
+		<result column="rid" property="rid" />
+		<result column="pid" property="pid" />
+		<result column="prid" property="prid" />
+		<result column="writer" property="writer" />
+		<result column="contents" property="contents" />
+		<result column="create_date" property="create_date" />
+		<result column="likes" property="likes" />
+		<result column="hates" property="hates" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.ReplyUser"
+		id="replyuserMap">
+		<collection property="user" resultMap="userMap" />
+		<collection property="reply" resultMap="replyMap" />
+	</resultMap>
+	
+	<!-- 사전작업 End -->
+	 
+	 
+	<!-- 댓글 CRUD Start -->
+
+	
+	<insert id="createReply">
+		insert into REPLY
+		(pid, prid, writer, contents, create_date, likes, hates)
+		values ( #{pid}, #{prid}, #{writer}, #{contents}, now(), 0, 0)
+	</insert>
+
+	<select id="selectAllReply" resultMap = "replyuserMap">
+		SELECT *
+		FROM REPLY r join USER u
+		on r.writer = u.uid
+		WHERE r.Pid = #{pid} AND prid = #{prid}
+		ORDER BY
+				case when #{type} = 1 then r.likes END DESC,
+				case when #{type} = 2 then r.create_date END DESC,
+				case when #{type} = 3 then (r.likes/(r.hates+1)) END DESC
+				
+		
+	</select>
+
+	<select id="selectReReply" resultMap = "replyuserMap">
+		SELECT *
+		FROM REPLY r join USER u
+		on r.writer = u.uid
+		WHERE r.Pid = #{pid} AND prid = #{prid}
+		ORDER BY
+				case when #{type} = 1 then r.likes END DESC,
+				case when #{type} = 2 then r.create_date END DESC,
+				case when #{type} = 3 then (r.likes/(r.hates+1)) END DESC
+	</select>
+	
+	
+	<select id ="selectReply" resultType = "com.web.blog.model.Reply">
+		SELECT *
+		from REPLY
+		WHERE rid = #{rid}
+	
+	</select>
+	
+	<update id="updateReply">
+		update REPLY
+		set
+		contents = #{contents}
+		where rid = #{rid}
+	</update>
+	
+	
+	<delete id="deleteReply">
+		delete from REPLY
+		where rid = #{rid}
+	</delete>
+	
+	<!-- 댓글 CRUD End -->
+	
+	<update id = "likesReply">
+		update REPLY
+		set
+		likes = likes+1
+		where rid = #{rid}
+	</update>
+	
+	<update id = "hatesReply">
+		update REPLY
+		set
+		hates = hates +1
+		where rid = #{rid}
+	</update>
+	
+	<update id = "unlikesReply">
+		update REPLY
+		set
+		likes = likes-1
+		where rid = #{rid}
+	</update>
+	
+	<update id = "unhatesReply">
+		update REPLY
+		set
+		hates = hates-1
+		where rid = #{rid}
+	</update>
+	
+	
+	<select id = "likesCheck" resultType = "Integer">
+		SELECT count(*) from LIKELIST WHERE (rid = #{rid} AND uid = #{uid} AND likes = 1); 
+	</select>
+	
+	<select id = "hatesCheck" resultType = "Integer">
+		SELECT count(*) from LIKELIST WHERE (rid = #{rid} AND uid = #{uid} AND hates = 1);
+	</select>
+	
+	<update id = "likesReplyUp">
+		insert into LIKELIST
+		(rid, uid, likes) values (#{rid}, #{uid}, 1);
+	</update>
+	
+	<update id = "hatesReplyUp">
+		insert into LIKELIST
+		(rid, uid, hates) values (#{rid}, #{uid}, 1);
+	</update>
+	
+	<delete id = "likesReplyDown">
+		delete from LIKELIST
+		where (rid = #{rid} and uid = #{uid} and likes = 1);
+	</delete>
+	
+	<delete id = "hatesReplyDown">
+		delete from LIKELIST
+		where (rid = #{rid} and uid = #{uid} and hates = 1);
+	</delete>
+	
+	
+	
+	
+	
+</mapper>

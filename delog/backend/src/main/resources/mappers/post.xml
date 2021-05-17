@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="POST">
+
+	<!-- 사전작업 : User와 Post table Join Start -->
+	<resultMap type="com.web.blog.model.user.User" id="userMap">
+    	<result column="uid" property="uid"/>
+    	<result column="email" property="email"/>
+    	<result column="password" property="password"/>
+    	<result column="nickname" property="nickname"/>
+    	<result column="role" property="role"/>
+    	<result column="provider" property="provider"/>
+    	<result column="snsid" property="snsid"/>
+    	<result column="create_date" property="create_date"/>
+    	<result column="profile" property="profile"/>
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.post.Post" id="postMap">
+		<result column="pid" property="pid" />
+		<result column="writer" property="writer" />
+		<result column="title" property="title" />
+		<result column="contents" property="contents" />
+		<result column="hit" property="hit" />
+		<result column="is_hidden" property="is_hidden" />
+		<result column="create_date" property="create_date" />
+		<result column="tags" property="tags" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.Hashtag" id="hashtagMap">
+		<result column="hid" property="hid" />
+		<result column="title" property="title" />
+		<result column="count" property="count" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.DailyPostCount" id="dailypostcountMap">
+		<result column="date" property="date" />
+		<result column="count" property="count" />
+	</resultMap>
+	
+	
+	<resultMap type="com.web.blog.model.post.PostUser"
+		id="postuserMap">
+		<collection property="user" resultMap="userMap" />
+		<collection property="post" resultMap="postMap" />
+	</resultMap>
+
+	<resultMap type="com.web.blog.model.PostHashtag"
+		id="posthashtagMap">
+		<collection property="hashtag" resultMap="hashtagMap" />
+		<collection property="post" resultMap="postMap" />
+		<collection property="user" resultMap="userMap" />
+	</resultMap>
+
+	<!-- 사전작업 End -->
+
+	<!-- 1. Create 2. Read(+ listuserMap) 3. Update 4. Delete Start -->
+
+	<insert id="createPost" useGeneratedKeys="true"
+		keyProperty="pid">
+		insert into POST
+		(writer, title, contents, hit, is_hidden,
+		is_complete,
+		create_date, tags)
+		values (#{writer}, #{title},
+		#{contents}, 0, #{is_hidden},
+		0, now(), #{tags})
+	</insert>
+
+	<select id="selectPost" resultMap="postuserMap">
+		select *
+		from POST p join USER
+		u
+		on p.writer = u.uid
+		where p.pid = #{pid}
+	</select>
+
+	<select id="selectAllPost" resultMap="postuserMap">
+		select *
+		from POST p join
+		USER u
+		on p.writer = u.uid
+		where p.is_hidden = 0
+		order by p.pid desc
+	</select>
+
+	<update id="updatePost">
+		update POST
+		set
+		title=#{title}, contents = #{contents},
+		tags=#{tags} ,hit = #{hit}, is_hidden = #{is_hidden}
+		where pid = #{pid}
+	</update>
+
+
+	<delete id="deletePost">
+		delete from POST
+		where pid = #{pid}
+	</delete>
+
+	<select id="selectMyPost" resultMap="postuserMap">
+		select *
+		from POST p join
+		USER u
+		on p.writer = u.uid
+		where uid = #{uid}
+		order by p.hit desc
+		limit
+		#{page}, 6
+	</select>
+	<!-- CRUD End -->
+
+
+	<!-- 글 숨기기 Start -->
+	<!-- 내 숨긴 글 다보기 -->
+	<select id="hiddenList" resultMap="postuserMap">
+		select *
+		from POST p join USER
+		u
+		on p.writer = u.uid
+		where p.writer = #{uid} and p.is_hidden = 1 and
+		p.is_complete = 0
+	</select>
+
+	<!-- 글 숨기기 -->
+	<update id="hidePost">
+		update POST
+		set
+		is_hidden = 1
+		where pid = #{pid}
+	</update>
+	<!-- 글 다시 보기 -->
+	<update id="unhidePost">
+		update POST
+		set
+		is_hidden = 0
+		where pid = #{pid}
+	</update>
+	<!-- 글 숨기기 End -->
+
+
+	<!-- 임시 저장 Start -->
+
+	<select id="TempList" resultMap="postuserMap">
+		select *
+		from POST p join USER u
+		on p.writer = u.uid
+		where p.writer = #{uid} and p.is_complete = 1
+	</select>
+
+	<select id="selectTemp" resultMap="postuserMap">
+		select *
+		from POST p join USER
+		u
+		on p.writer = u.uid
+		where p.writer = #{uid} and p.is_complete = 1 and
+		p.pid = #{p.pid}
+	</select>
+
+	<insert id="createTemp">
+		insert into POST
+		(writer, title, contents, hit,
+		is_hidden, is_complete, create_date,tags)
+		values (#{writer}, #{title},
+		#{contents}, 1, 1, 1, now(),#{tags})
+	</insert>
+
+	<update id="updateTemp">
+		update POST
+		set
+		title=#{title}, contents =
+		#{contents},tags = #{tags}
+		where pid = #{pid}
+	</update>
+
+	<delete id="deleteTemp">
+		delete from POST
+		where pid = #{pid}
+	</delete>
+
+	<update id="changeTemp">
+		update POST
+		set
+		is_hidden = 0, is_complete = 0
+		where pid
+		= #{pid}
+	</update>
+	<!-- 임시 저장 End -->
+
+
+
+	<!-- 조회수 Start -->
+	<update id="updateHit">
+		update POST
+		set
+		hit = hit+1
+		where pid = #{pid}
+	</update>
+
+	<!-- 조회수 End -->
+
+	<!-- type별 검색 1. hashtag 2. title 3. contents 4. nickname Start -->
+
+	<select id="selectPostsByTitle" resultMap="postuserMap">
+		select
+		*
+		from
+		POST p join USER u
+		on p.writer = u.uid
+		where p.title like
+		CONCAT('%',
+		#{value} , '%') and p.is_hidden = 0
+		order by p.pid
+		limit
+		#{page}, 6
+	</select>
+	
+	<select id="selectPostByTitleCount" resultType = "Integer">
+		select count(*)
+		from POST
+		where title like CONCAT('%',
+		#{value} , '%') and is_hidden = 0
+	</select>
+
+	<select id="selectPostsByContents" resultMap="postuserMap">
+		select
+		*
+		from POST p
+		join USER u
+		on p.writer = u.uid
+		where p.contents like
+		CONCAT('%',
+		#{value} , '%') and p.is_hidden = 0
+		order by p.pid
+		limit
+		#{page}, 6
+	</select>
+	
+	<select id="selectPostByContentsCount" resultType = "Integer">
+		select count(*)
+		from POST
+		where contents like CONCAT('%',
+		#{value} , '%') and is_hidden = 0
+	</select>
+	
+	<select id="selectPostsByNickname" resultMap="postuserMap">
+		select *
+		from POST p
+		join USER u
+		on p.writer = u.uid
+		where u.nickname like CONCAT('%',
+		#{value} , '%') and p.is_hidden = 0
+		order by p.pid
+		limit #{page}, 6
+	</select>
+	
+	<select id="selectPostByNicknameCount" resultType = "Integer">
+		select count(*)
+		from POST p
+		join USER u
+		on p.writer = u.uid
+		where u.nickname like CONCAT('%',
+		#{value} , '%') and p.is_hidden = 0
+
+	</select>
+	
+	<select id="selectPostByHashTag" resultMap="posthashtagMap">
+		select *
+		from POST p
+		join USER u
+		on p.writer = u.uid
+		where tags like CONCAT('%',
+		#{value} , '%') and is_hidden = 0
+		order by pid
+		limit #{page}, 6
+		
+	</select>
+	
+	<select id="selectPostByHashTagCount" resultType = "Integer">
+		select 
+		IFNULL((SELECT count FROM HASHTAG where title = #{value}), 0);
+	</select>
+	
+	<!-- Search End -->
+
+	<!-- 여러 출력문 Start -->
+
+	<select id="selectRecentPost" resultMap="postuserMap">
+		SELECT * FROM POST where
+		is_hidden = 0 ORDER BY create_Date desc LIMIT 5;
+	</select>
+
+
+	<!-- File 추가 -->
+	<insert id="insertFile">
+		INSERT INTO
+		FILE(pid, filename, Original_Filename, file_url, create_date)
+		VALUES(#{pid}, #{filename}, #{original_filename}, #{file_url}, now())
+	</insert>
+
+	<select id="selectNoHiddenAllPosts" resultMap="postuserMap">
+		select *
+		from POST p
+		join USER u
+		on p.writer = u.uid
+		where is_hidden = 0
+		order by p.pid
+		limit #{page}, 6
+	</select>
+	
+	<update id="updateThumbnail">
+	 	UPDATE 
+	 	POST
+	 	SET thumbnail = #{thumbnailPath}
+	 	WHERE pid = #{pid}
+	 </update>
+	
+	<select id="selectDailyCount" resultMap="dailypostcountMap">
+		SELECT  
+		Date_format(Create_date, '%Y-%m-%d') AS date, COUNT(*) AS count 
+		FROM POST 
+		WHERE Writer = #{uid} 
+		GROUP BY Date_format(Create_date, '%Y-%m-%d');
+	</select>
+	
+</mapper>

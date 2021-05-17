@@ -1,0 +1,118 @@
+$color-blue: #727fff;
+$color-black: #000;
+$color-gray: #888888;
+$color-white: #fff;
+$mobile: 320px;
+$desktop: 1024px;
+
+.center {
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.label {
+  font-family: 'Quantico';
+  text-align: center;
+}
+
+.card-wrapper {
+  text-align:center;
+  justify-content: center;
+  min-height: 300px;  
+  @media screen and (max-width: $mobile) {
+    flex-direction: column;
+  }
+}
+
+img{
+  width:100%;
+  height:100%;
+}
+
+.blog-card:hover .blog-card__title{
+  text-decoration:underline;
+}
+.blog-card {
+  box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.2), 0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+  display: inline-block;
+  width: 28%;
+  margin:35px 7px;
+  text-align: initial;  
+  .blog-card__thumbnail {
+    object-fit: cover;
+    cursor: pointer;
+  }
+  
+  .blog-card__details {
+    margin-top:-10px;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    background: $color-white;
+   
+  }
+  
+  .blog-card__title {
+    font-family: 'Quantico';
+    font-size: 16px;
+    text-transform: uppercase;
+    color: $color-black;
+    cursor: pointer;
+    margin-bottom:15px;
+  }
+  
+  .blog-card__description, .writeinfo {
+    font-family: 'Open Sans';
+    font-weight: 300;
+    font-size: 10px;
+    color: $color-gray;
+  }
+
+  .locker {
+    margin-left:5px;
+    color : $color-gray;
+  }
+
+  .tagset {
+    font-family: 'Open Sans';
+    font-weight: 400;
+    font-size: 14px;
+    color: $color-gray;
+  }
+  .wtags {
+    margin-right: 2px;
+    padding: 3px;
+    border: 1px solid #ccc;
+    border-radius: 3rem;
+    cursor: pointer; 
+    margin-right:5px;
+}
+
+}
+.inside {
+  margin-top:150px;
+}
+.msg1{
+  font-size:18px;
+}
+.msg2{
+  color:#7e7d7d;
+  font-size:13px;
+}
+.btnhome{
+  margin-top:10px;
+}
+.btnhome:hover, .btnhome:focus { animation-duration: 3s; animation-name: rainbowLink; animation-iteration-count: infinite; } 
+@keyframes rainbowLink {     
+0% { color: #ff2a2a; }
+15% { color: #ff7a2a; }
+30% { color: #ffc52a; }
+45% { color: #43ff2a; }
+60% { color: #2a89ff; }
+75% { color: #202082; }
+90% { color: #6b2aff; } 
+100% { color: #e82aff; }
+}
