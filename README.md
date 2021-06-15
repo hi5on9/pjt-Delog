@@ -2,7 +2,7 @@
 
 
 
-##### 0. happyhouse(https://github.com/hi5on9/project1_web)
+##### 0. happyhouse(https://github.com/hi5on9/ssafy_happyhouse)
 
 ##### 1. Delog
 
