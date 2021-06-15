@@ -4,7 +4,7 @@
 
 ##### 0. happyhouse(https://github.com/hi5on9/ssafy_happyhouse)
 
-##### 1. Delog
+##### 1. Delog(https://github.com/hi5on9/ssafy_Delog)
 
 ##### 2. HOTBODY
 
